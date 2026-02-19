@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>સંભવનાથાર્પણ - Front Cover</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;600;700;800;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    @page { size: A4 portrait; margin: 0; }
+
+    body {
+      width: 210mm;
+      height: 297mm;
+      margin: 0 auto;
+      font-family: 'Noto Sans Gujarati', sans-serif;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .page {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: linear-gradient(170deg, #fffbf5 0%, #fff7ed 40%, #fef3e2 70%, #fde8cd 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── Subtle decorative circles ── */
+    .deco-circle {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px solid rgba(234, 88, 12, 0.08);
+    }
+    .deco-circle.c1 { width: 420px; height: 420px; top: -100px; right: -120px; }
+    .deco-circle.c2 { width: 320px; height: 320px; bottom: -70px; left: -90px; }
+    .deco-circle.c3 { width: 200px; height: 200px; top: 55%; left: -60px; opacity: 0.5; }
+
+    /* ── Ornamental top/bottom borders ── */
+    .border-bar {
+      position: absolute;
+      background: linear-gradient(90deg,
+        transparent 0%, #d97706 8%, #f59e0b 18%, #fbbf24 30%,
+        #f59e0b 42%, #d97706 50%, #f59e0b 58%, #fbbf24 70%,
+        #f59e0b 82%, #d97706 92%, transparent 100%);
+    }
+    .border-bar.top { top: 0; left: 0; right: 0; height: 10px; }
+    .border-bar.bottom { bottom: 0; left: 0; right: 0; height: 10px; }
+    .border-bar.left {
+      top: 0; bottom: 0; left: 0; width: 10px;
+      background: linear-gradient(180deg,
+        transparent 0%, #d97706 8%, #f59e0b 18%, #fbbf24 30%,
+        #f59e0b 42%, #d97706 50%, #f59e0b 58%, #fbbf24 70%,
+        #f59e0b 82%, #d97706 92%, transparent 100%);
+    }
+    .border-bar.right {
+      top: 0; bottom: 0; right: 0; width: 10px;
+      background: linear-gradient(180deg,
+        transparent 0%, #d97706 8%, #f59e0b 18%, #fbbf24 30%,
+        #f59e0b 42%, #d97706 50%, #f59e0b 58%, #fbbf24 70%,
+        #f59e0b 82%, #d97706 92%, transparent 100%);
+    }
+
+    /* ── Double inner frame ── */
+    .inner-frame {
+      position: absolute;
+      top: 22px; left: 22px; right: 22px; bottom: 22px;
+      border: 2px solid rgba(180, 83, 9, 0.25);
+      border-radius: 8px;
+    }
+    .inner-frame::before {
+      content: '';
+      position: absolute;
+      top: 5px; left: 5px; right: 5px; bottom: 5px;
+      border: 1px solid rgba(180, 83, 9, 0.12);
+      border-radius: 5px;
+    }
+
+    /* ── Corner ornaments ── */
+    .corner {
+      position: absolute;
+      font-size: 28px;
+      color: #b45309;
+      opacity: 0.35;
+    }
+    .corner.tl { top: 28px; left: 28px; }
+    .corner.tr { top: 28px; right: 28px; transform: scaleX(-1); }
+    .corner.bl { bottom: 28px; left: 28px; transform: scaleY(-1); }
+    .corner.br { bottom: 28px; right: 28px; transform: scale(-1, -1); }
+
+    /* ── Mandala watermark ── */
+    .mandala {
+      position: absolute;
+      width: 500px; height: 500px;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.035;
+    }
+    .mandala svg { width: 100%; height: 100%; }
+
+    /* ── Content ── */
+    .content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 60px 40px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* ── Namah salutations row ── */
+    .namah-row {
+      position: absolute;
+      top: 30px;
+      left: 50px;
+      right: 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 20;
+    }
+    .namah-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: #92400e;
+    }
+    .namah-text.center {
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .om-line {
+      font-size: 22px;
+      color: #b45309;
+      letter-spacing: 12px;
+      margin-bottom: 10px;
+      opacity: 0.6;
+    }
+
+    /* ── Name writing field ── */
+    .name-field {
+      width: 80%;
+      max-width: 380px;
+      margin-top: 8px;
+    }
+    .name-field-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 6px;
+    }
+    .name-field-box {
+      border: 1.5px dashed rgba(180, 83, 9, 0.35);
+      border-radius: 8px;
+      padding: 14px 16px;
+      min-height: 44px;
+      background: rgba(255, 255, 255, 0.5);
+    }
+    .name-field-hint {
+      font-size: 11px;
+      color: #b45309;
+      opacity: 0.5;
+    }
+
+    .occasion {
+      font-size: 15px;
+      font-weight: 700;
+      color: #92400e;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+
+    .divider {
+      width: 180px;
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent, #b45309, transparent);
+      margin: 12px auto;
+    }
+    .divider.short {
+      width: 120px;
+      height: 1px;
+      margin: 10px auto;
+    }
+    .divider.long {
+      width: 240px;
+    }
+
+    /* ── Photo frame ── */
+    .photo-frame {
+      width: 200px;
+      height: 200px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 3px solid #d97706;
+      box-shadow: 0 4px 20px rgba(180, 83, 9, 0.15), 0 0 0 6px rgba(251, 191, 36, 0.12);
+      margin: 8px 0 12px;
+    }
+    .photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .main-title {
+      font-size: 56px;
+      font-weight: 900;
+      color: #7c2d12;
+      line-height: 1.2;
+      letter-spacing: 2px;
+      margin: 4px 0;
+    }
+
+    .english-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #b45309;
+      letter-spacing: 7px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .tagline {
+      font-size: 17px;
+      font-weight: 600;
+      color: #78350f;
+      line-height: 1.7;
+      max-width: 420px;
+      margin-top: 8px;
+    }
+
+    .purpose {
+      font-size: 13px;
+      color: #92400e;
+      line-height: 1.7;
+      max-width: 360px;
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+
+    /* ── Period box ── */
+    .period-box {
+      border: 1.5px solid rgba(180, 83, 9, 0.25);
+      border-radius: 10px;
+      padding: 12px 24px;
+      margin-top: 10px;
+      background: rgba(255, 255, 255, 0.45);
+      text-align: center;
+    }
+    .period-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #b45309;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+    .period-dates {
+      font-size: 15px;
+      font-weight: 700;
+      color: #7c2d12;
+      line-height: 1.5;
+    }
+    .period-tithi {
+      font-size: 12px;
+      font-weight: 600;
+      color: #92400e;
+      margin-top: 2px;
+    }
+
+    .lotus {
+      font-size: 22px;
+      color: #b45309;
+      opacity: 0.5;
+      margin: 8px 0;
+      letter-spacing: 6px;
+    }
+
+    .organizer-label {
+      font-size: 12px;
+      color: #92400e;
+      letter-spacing: 3px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .organizer-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: #7c2d12;
+      margin-top: 3px;
+    }
+
+    .organizer-location {
+      font-size: 14px;
+      color: #92400e;
+      font-weight: 600;
+    }
+
+    .jai-jinendra {
+      font-size: 15px;
+      color: #b45309;
+      font-weight: 700;
+      letter-spacing: 3px;
+      margin-top: 8px;
+    }
+
+    @media print {
+      body { margin: 0; }
+      .page { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="border-bar top"></div>
+    <div class="border-bar bottom"></div>
+    <div class="border-bar left"></div>
+    <div class="border-bar right"></div>
+    <div class="inner-frame"></div>
+    <div class="deco-circle c1"></div>
+    <div class="deco-circle c2"></div>
+    <div class="deco-circle c3"></div>
+    <div class="corner tl">❋</div>
+    <div class="corner tr">❋</div>
+    <div class="corner bl">❋</div>
+    <div class="corner br">❋</div>
+
+    <div class="mandala">
+      <svg viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="90" fill="none" stroke="#92400e" stroke-width="1.5"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#92400e" stroke-width="1"/>
+        <circle cx="100" cy="100" r="50" fill="none" stroke="#92400e" stroke-width="1"/>
+        <circle cx="100" cy="100" r="30" fill="none" stroke="#92400e" stroke-width="0.8"/>
+        <line x1="100" y1="5" x2="100" y2="195" stroke="#92400e" stroke-width="0.5"/>
+        <line x1="5" y1="100" x2="195" y2="100" stroke="#92400e" stroke-width="0.5"/>
+        <line x1="25" y1="25" x2="175" y2="175" stroke="#92400e" stroke-width="0.5"/>
+        <line x1="175" y1="25" x2="25" y2="175" stroke="#92400e" stroke-width="0.5"/>
+        <polygon points="100,10 110,90 190,100 110,110 100,190 90,110 10,100 90,90" fill="none" stroke="#92400e" stroke-width="0.8"/>
+      </svg>
+    </div>
+
+    <div class="content">
+      <!-- ── Tirthankar Namah Row ── -->
+      <div class="namah-row">
+        <div class="namah-text">શ્રી આદિનાથાય નમઃ</div>
+        <div class="namah-text center">શ્રી સંભવનાથાય નમઃ</div>
+        <div class="namah-text">શ્રી અજિતનાથાય નમઃ</div>
+      </div>
+
+      <div class="om-line">✦ ☸ ✦</div>
+
+      <div class="occasion">પૂરણ નગરે ૧૨૫ મી ધ્વજારોહણ નિમિત્તે</div>
+
+      <div class="divider"></div>
+
+      <!-- Sambhavnatharpan Image -->
+      <div class="photo-frame">
+        <img src="../assets/images/dhwaja-square.jpg" alt="Sambhavnatharpan" />
+      </div>
+
+      <div class="main-title">સંભવનાથાર્પણ</div>
+      <div class="english-title">Sambhavnatharpan</div>
+
+      <div class="divider"></div>
+
+      <div class="tagline">
+        સંભવનાથ ભગવાન પ્રત્યે કૃતજ્ઞતા વ્યક્ત કરવાની<br>
+        એક સુંદર તક
+      </div>
+
+      <div class="purpose">
+        જીવનની ગુણવત્તા સુધારવા અને આધ્યાત્મિક ઉન્નતિ માટે<br>
+        દૈનિક નિયમ ટ્રેકિંગ પુસ્તિકા
+      </div>
+
+      <!-- ── Niyam Period ── -->
+      <div class="period-box">
+        <div class="period-label">── નિયમ સમયગાળો ──</div>
+        <div class="period-dates">૧૪ માર્ચ ૨૦૨૬  થી  ૧૪ ડિસેમ્બર ૨૦૨૬</div>
+        <div class="period-tithi">ફાગણ વદ ૧૦  થી  માગશર સુદ ૫ (વિ.સં. ૨૦૮૩)</div>
+      </div>
+
+      <div class="lotus">✿ ❀ ✿</div>
+
+      <div class="divider short"></div>
+
+      <div class="organizer-label">── આયોજક ──</div>
+      <div class="organizer-name">પૂરણ પંચ મહાજન</div>
+      <div class="organizer-location">પૂરણ</div>
+
+      <div class="divider short"></div>
+
+      <!-- ── Name Writing Field ── -->
+      <div class="name-field">
+        <div class="name-field-label">નામ (Name):</div>
+        <div class="name-field-box"></div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

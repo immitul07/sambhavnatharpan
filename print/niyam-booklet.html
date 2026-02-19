@@ -1,0 +1,314 @@
+﻿<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>સંભવનાથાર્પણ - નિયમ ટ્રેકિંગ પુસ્તિકા</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;600;700;800&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    @page { size: 210mm 297mm; margin: 5mm; }
+
+    body {
+      font-family: 'Noto Sans Gujarati', sans-serif;
+      background: #fff;
+      color: #1a1a1a;
+    }
+
+    .page {
+      width: 200mm;
+      height: 287mm;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+      padding: 1mm;
+    }
+    .page:last-child { page-break-after: auto; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 1.5mm;
+      border-bottom: 0.5px solid #c4956a;
+      padding-bottom: 1mm;
+    }
+    .header-left {
+      font-size: 13px;
+      font-weight: 800;
+      color: #7c2d12;
+    }
+    .header-right {
+      display: flex;
+      gap: 10px;
+    }
+    .header-field {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 8px;
+      font-weight: 600;
+      color: #78350f;
+    }
+    .header-field .field-line {
+      border-bottom: 1px solid #92400e;
+      width: 70px;
+      height: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      border: 0.5px solid #b8855c;
+    }
+    th, td {
+      border: 0.5px solid #b8855c;
+      text-align: center;
+      vertical-align: middle;
+      padding: 0;
+      line-height: 1.15;
+      overflow: hidden;
+    }
+    th {
+      background: #fef3e2;
+      color: #78350f;
+      font-weight: 700;
+      font-size: 7px;
+      height: 5.2mm;
+    }
+    td {
+      font-size: 6.5px;
+      height: 5.2mm;
+    }
+
+    td.niyam-cell {
+      text-align: left;
+      padding-left: 1px;
+      font-size: 9px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    th.niyam-hdr {
+      text-align: left;
+      padding-left: 1px;
+    }
+    td.sr-cell { font-size: 5.5px; color: #555; }
+    td.pts-cell {
+      font-size: 6px;
+      font-weight: 700;
+      color: #92400e;
+      background: #fef9f0;
+    }
+    td.total-cell { background: #fffbf5; }
+
+    tr:nth-child(even) td { background: #fffcf7; }
+    tr:nth-child(even) td.pts-cell { background: #fef3e2; }
+    tr:nth-child(even) td.total-cell { background: #fef9f0; }
+
+    .total-row td {
+      background: #fde8cd !important;
+      font-weight: 700;
+      font-size: 9px;
+      color: #7c2d12;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 6px;
+      color: #b45309;
+      margin-top: 1mm;
+      opacity: 0.5;
+    }
+
+    @media print {
+      body { margin: 0; }
+      .page { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<script>
+const NIYAMS = [
+  { gu: 'જિન પૂજા', pts: 10 },
+  { gu: 'અષ્ટપ્રકારી પૂજા', pts: 30 },
+  { gu: '૩ પ્રદક્ષિણા આપવી', pts: 10 },
+  { gu: 'ચૈત્યવંદન', pts: 20 },
+  { gu: 'ગુરૂવંદન', pts: 20 },
+  { gu: 'રાઈ પ્રતિક્રમણ', pts: 30 },
+  { gu: 'દેવસિય પ્રતિક્રમણ', pts: 30 },
+  { gu: 'સામાયિક', pts: 30 },
+  { gu: 'સાંજના દર્શન', pts: 10 },
+  { gu: 'ગોચરી માટે વિનંતી', pts: 10 },
+  { gu: '૩૦ મિ. જિનવાણી શ્રવણ', pts: 20 },
+  { gu: 'નવકારવાળી', pts: 20 },
+  { gu: 'ૐ હ્રીં સંભવનાથ નવકારવાળી', pts: 10 },
+  { gu: 'પાઠશાળામાં જવું', pts: 20 },
+  { gu: 'નવી ગાથા', pts: 10 },
+  { gu: '૩૦ મિ. સ્વાધ્યાય', pts: 10 },
+  { gu: '૧૫ મિ. ધાર્મિક વાચન', pts: 10 },
+  { gu: 'જ્ઞાનના ૫ ખમાસણા', pts: 10 },
+  { gu: '૧૨ લોગસ્સ કાયોત્સર્ગ', pts: 20 },
+  { gu: 'સૂતા ૭, ઊઠતા ૮ નવકાર', pts: 10 },
+  { gu: 'નવકારશી', pts: 10 },
+  { gu: 'રાત્રિભોજન ત્યાગ', pts: 20 },
+  { gu: 'કંદમૂળ ત્યાગ', pts: 10 },
+  { gu: 'થાળી ધોઈ પાણી પીવું', pts: 10 },
+  { gu: 'મૌન સાથે ભોજન', pts: 10 },
+  { gu: 'ઉકાળેલું પાણી પીવું', pts: 20 },
+  { gu: 'અભક્ષ્ય ભોજન ત્યાગ', pts: 20 },
+  { gu: 'તમાકુ/સિગારેટ ત્યાગ', pts: 10 },
+  { gu: 'ટીવી/મોબાઈલ ત્યાગ (ભોજન)', pts: 10 },
+  { gu: 'કૂતરાને રોટલી આપવી', pts: 10 },
+  { gu: 'અનુકંપા દાન', pts: 10 },
+  { gu: 'ગુસ્સો ન કરવો', pts: 20 },
+  { gu: 'જૂઠું ન બોલવું', pts: 20 },
+  { gu: 'મિચ્છામી દુક્કડમ માંગવું', pts: 20 },
+  { gu: 'અન્યના ગુણાનુવાદ', pts: 20 },
+  { gu: 'અપશબ્દ ન બોલવા', pts: 10 },
+  { gu: 'પરનિંદા નહીં', pts: 20 },
+  { gu: 'સરખામણી ના કરવી', pts: 10 },
+  { gu: '"Thank You" કહેવું', pts: 10 },
+  { gu: 'એક વ્યક્તિને મદદ', pts: 20 },
+  { gu: 'માતા-પિતાને પ્રણામ', pts: 20 },
+  { gu: 'ફિલ્મ/વેબ સિરીઝ ત્યાગ', pts: 20 },
+  { gu: 'સાબુનો ત્યાગ', pts: 10 },
+  { gu: 'પરફ્યુમનો ત્યાગ', pts: 10 },
+  { gu: '૧ કલાક મૌન', pts: 20 },
+  { gu: 'બિનજરૂરી ફરિયાદ નહીં', pts: 10 },
+  { gu: '૧૫ મિ. પરિવાર સાથે', pts: 20 },
+  { gu: 'ભગવાનની મહિમા વિચારવું', pts: 10 },
+];
+
+const MONTHS = [
+  { name: 'March', year: 2026, start: 14, end: 31 },
+  { name: 'April', year: 2026, start: 1, end: 30 },
+  { name: 'May', year: 2026, start: 1, end: 31 },
+  { name: 'June', year: 2026, start: 1, end: 30 },
+  { name: 'July', year: 2026, start: 1, end: 31 },
+  { name: 'August', year: 2026, start: 1, end: 31 },
+  { name: 'September', year: 2026, start: 1, end: 30 },
+  { name: 'October', year: 2026, start: 1, end: 31 },
+  { name: 'November', year: 2026, start: 1, end: 30 },
+  { name: 'December', year: 2026, start: 1, end: 14 },
+];
+
+// Max dates that fit on ONE page with niyam column
+// Sr(4mm) + Niyam(38mm) + dates(5mm each) + Pts(6mm) + Total(7mm) = 55mm + 5*n ≤ 200mm → n ≤ 29
+// But to keep readable, limit single page to ~22 dates
+const MAX_DATES_SINGLE = 22;
+
+function makeHeader(month, suffix) {
+  return `<div class="header">
+    <div class="header-left">${month.name} ${month.year}${suffix}</div>
+    <div class="header-right">
+      <div class="header-field">નામ: <div class="field-line"></div></div>
+      <div class="header-field">ફોન: <div class="field-line"></div></div>
+    </div>
+  </div>`;
+}
+
+function generateSinglePage(month, dates) {
+  let html = `<div class="page">`;
+  html += makeHeader(month, '');
+
+  html += `<table><colgroup>`;
+  html += `<col style="width:4mm">`;
+  html += `<col style="width:38mm">`;
+  dates.forEach(() => { html += `<col>`; });
+  html += `<col style="width:6mm">`;
+  html += `<col style="width:7mm">`;
+  html += `</colgroup>`;
+
+  html += `<thead><tr>`;
+  html += `<th>ક્ર.</th><th class="niyam-hdr">નિયમ</th>`;
+  dates.forEach(d => { html += `<th>${d}</th>`; });
+  html += `<th>પોઈ.</th><th>કુલ</th>`;
+  html += `</tr></thead><tbody>`;
+
+  NIYAMS.forEach((n, i) => {
+    html += `<tr><td class="sr-cell">${i+1}</td><td class="niyam-cell">${n.gu}</td>`;
+    dates.forEach(() => { html += `<td></td>`; });
+    html += `<td class="pts-cell">${n.pts}</td><td class="total-cell"></td></tr>`;
+  });
+
+  html += `<tr class="total-row"><td></td><td class="niyam-cell" style="font-weight:700">કુલ</td>`;
+  dates.forEach(() => { html += `<td></td>`; });
+  html += `<td></td><td></td></tr>`;
+  html += `</tbody></table>`;
+  html += `<div class="footer">સંભવનાથાર્પણ • ${month.name} ${month.year}</div></div>`;
+  return html;
+}
+
+function generateTwoPages(month, allDates) {
+  const mid = Math.ceil(allDates.length / 2);
+  const leftDates = allDates.slice(0, mid);
+  const rightDates = allDates.slice(mid);
+  let html = '';
+
+  // ── LEFT PAGE: Sr + Niyam + left dates ──
+  html += `<div class="page">`;
+  html += makeHeader(month, '');
+
+  html += `<table><colgroup><col style="width:4mm"><col style="width:45mm">`;
+  leftDates.forEach(() => { html += `<col>`; });
+  html += `</colgroup><thead><tr><th>ક્ર.</th><th class="niyam-hdr">નિયમ</th>`;
+  leftDates.forEach(d => { html += `<th>${d}</th>`; });
+  html += `</tr></thead><tbody>`;
+
+  NIYAMS.forEach((n, i) => {
+    html += `<tr><td class="sr-cell">${i+1}</td><td class="niyam-cell">${n.gu}</td>`;
+    leftDates.forEach(() => { html += `<td></td>`; });
+    html += `</tr>`;
+  });
+  html += `<tr class="total-row"><td></td><td class="niyam-cell" style="font-weight:700">કુલ</td>`;
+  leftDates.forEach(() => { html += `<td></td>`; });
+  html += `</tr></tbody></table>`;
+  html += `<div class="footer">સંભવનાથાર્પણ • ${month.name} ${month.year} • ૧/૨</div></div>`;
+
+  // ── RIGHT PAGE: Sr + right dates + Pts + Total ──
+  html += `<div class="page">`;
+  html += makeHeader(month, ' (ચાલુ)');
+
+  html += `<table><colgroup><col style="width:4mm">`;
+  rightDates.forEach(() => { html += `<col>`; });
+  html += `<col style="width:6mm"><col style="width:7mm">`;
+  html += `</colgroup><thead><tr><th>ક્ર.</th>`;
+  rightDates.forEach(d => { html += `<th>${d}</th>`; });
+  html += `<th>પોઈ.</th><th>કુલ</th></tr></thead><tbody>`;
+
+  NIYAMS.forEach((n, i) => {
+    html += `<tr><td class="sr-cell">${i+1}</td>`;
+    rightDates.forEach(() => { html += `<td></td>`; });
+    html += `<td class="pts-cell">${n.pts}</td><td class="total-cell"></td></tr>`;
+  });
+  html += `<tr class="total-row"><td></td>`;
+  rightDates.forEach(() => { html += `<td></td>`; });
+  html += `<td></td><td></td></tr></tbody></table>`;
+  html += `<div class="footer">સંભવનાથાર્પણ • ${month.name} ${month.year} • ૨/૨</div></div>`;
+
+  return html;
+}
+
+function generateMonth(month) {
+  const dates = [];
+  for (let d = month.start; d <= month.end; d++) dates.push(d);
+
+  if (dates.length <= MAX_DATES_SINGLE) {
+    return generateSinglePage(month, dates);
+  } else {
+    return generateTwoPages(month, dates);
+  }
+}
+
+let booklet = '';
+MONTHS.forEach(m => { booklet += generateMonth(m); });
+document.body.innerHTML = booklet;
+</script>
+
+</body>
+</html>
