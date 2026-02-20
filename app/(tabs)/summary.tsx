@@ -410,9 +410,11 @@ export default function SummaryScreen() {
     router.replace("/login");
   };
 
-  const loadSummary = useCallback(async () => {
+  const loadSummary = useCallback(async (isActive: () => boolean = () => true) => {
+    if (!isActive()) return;
     setLoading(true);
     const accountKey = await getAccountKeyFromStorage();
+    if (!isActive()) return;
     if (!accountKey) {
       setLoading(false);
       router.replace("/login");
@@ -420,8 +422,10 @@ export default function SummaryScreen() {
     }
 
     await migrateLegacyProgressData(accountKey);
+    if (!isActive()) return;
     const currentDob = (await AsyncStorage.getItem("dob")) || "";
     const currentNiyamList = getNiyamListForDob(currentDob);
+    if (!isActive()) return;
     setNiyamList(currentNiyamList);
     const [total, niyamData, weekly, currentStreak] = await Promise.all([
       getAllTimeTotal(accountKey, currentNiyamList),
@@ -429,6 +433,7 @@ export default function SummaryScreen() {
       getLast7DaysPoints(accountKey, currentNiyamList),
       calculateStreak(accountKey),
     ]);
+    if (!isActive()) return;
     setTotalPoints(total);
     setTotalDaysTracked(niyamData.totalDays);
     setNiyamProgress(niyamData.progress);
@@ -438,7 +443,13 @@ export default function SummaryScreen() {
   }, [router]);
 
   useFocusEffect(
-    useCallback(() => { loadSummary(); }, [loadSummary]),
+    useCallback(() => {
+      let isActive = true;
+      loadSummary(() => isActive);
+      return () => {
+        isActive = false;
+      };
+    }, [loadSummary]),
   );
 
   const sortedNiyams = [...niyamList].sort((a, b) => {

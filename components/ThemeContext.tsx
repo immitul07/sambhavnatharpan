@@ -54,9 +54,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
+    let isActive = true;
     AsyncStorage.getItem('darkMode').then((val) => {
+      if (!isActive) return;
       if (val === 'true') setIsDark(true);
     });
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const toggleDarkMode = () => {

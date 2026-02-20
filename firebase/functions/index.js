@@ -1,8 +1,10 @@
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 const twilio = require("twilio");
+const crypto = require("crypto");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onRequest } = require("firebase-functions/v2/https");
 const { logger } = require("firebase-functions");
 
 admin.initializeApp();
@@ -49,6 +51,158 @@ function toWhatsAppAddress(value) {
   const trimmed = String(value).trim();
   return trimmed.startsWith("whatsapp:") ? trimmed : `whatsapp:${trimmed}`;
 }
+
+function base64urlEncode(value) {
+  return Buffer.from(value, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function base64urlDecode(value) {
+  const normalized = String(value).replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  return Buffer.from(padded, "base64").toString("utf8");
+}
+
+function createAdminSessionToken(secret, payload) {
+  const headerSegment = base64urlEncode(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const payloadSegment = base64urlEncode(JSON.stringify(payload));
+  const content = `${headerSegment}.${payloadSegment}`;
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(content)
+    .digest("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+  return `${content}.${signature}`;
+}
+
+function verifyAdminSessionToken(secret, token) {
+  if (!token || token.split(".").length !== 3) return null;
+
+  const [headerSegment, payloadSegment, signatureSegment] = token.split(".");
+  const content = `${headerSegment}.${payloadSegment}`;
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(content)
+    .digest();
+
+  const provided = Buffer.from(
+    signatureSegment.replace(/-/g, "+").replace(/_/g, "/"),
+    "base64",
+  );
+  if (provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(base64urlDecode(payloadSegment));
+    if (!payload || typeof payload !== "object") return null;
+    if (payload.role !== "admin") return null;
+    if (typeof payload.exp !== "number" || payload.exp * 1000 <= Date.now()) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function setCorsHeaders(res) {
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Access-Control-Allow-Headers", "Content-Type");
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+}
+
+exports.adminSessionLogin = onRequest(
+  {
+    region: process.env.FUNCTIONS_REGION || "us-central1",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+  },
+  async (req, res) => {
+    setCorsHeaders(res);
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "method-not-allowed" });
+      return;
+    }
+
+    const adminPhone = normalizePhone(process.env.ADMIN_LOGIN_PHONE || "");
+    const adminDob = String(process.env.ADMIN_LOGIN_DOB || "").trim();
+    const sessionSecret = String(process.env.ADMIN_SESSION_SECRET || "");
+    if (!adminPhone || !adminDob || !sessionSecret) {
+      logger.error("Admin login env vars are missing.");
+      res.status(503).json({ error: "admin-login-not-configured" });
+      return;
+    }
+
+    const phoneNumber = normalizePhone(req.body?.phoneNumber || "");
+    const dob = String(req.body?.dob || "").trim();
+    if (!phoneNumber || !dob) {
+      res.status(400).json({ error: "missing-credentials" });
+      return;
+    }
+
+    if (phoneNumber !== adminPhone || dob !== adminDob) {
+      res.status(401).json({ error: "invalid-credentials" });
+      return;
+    }
+
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const expiresAtSeconds = nowSeconds + 8 * 60 * 60;
+    const token = createAdminSessionToken(sessionSecret, {
+      role: "admin",
+      iat: nowSeconds,
+      exp: expiresAtSeconds,
+    });
+
+    res.status(200).json({
+      token,
+      expiresAt: expiresAtSeconds * 1000,
+    });
+  },
+);
+
+exports.adminSessionVerify = onRequest(
+  {
+    region: process.env.FUNCTIONS_REGION || "us-central1",
+    memory: "256MiB",
+    timeoutSeconds: 30,
+  },
+  async (req, res) => {
+    setCorsHeaders(res);
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "method-not-allowed" });
+      return;
+    }
+
+    const sessionSecret = String(process.env.ADMIN_SESSION_SECRET || "");
+    if (!sessionSecret) {
+      res.status(503).json({ valid: false, error: "admin-login-not-configured" });
+      return;
+    }
+
+    const token = String(req.body?.token || "");
+    const payload = verifyAdminSessionToken(sessionSecret, token);
+    if (!payload) {
+      res.status(401).json({ valid: false, error: "invalid-session" });
+      return;
+    }
+
+    res.status(200).json({ valid: true, expiresAt: payload.exp * 1000 });
+  },
+);
 
 function toCsv(rows) {
   const escape = (value) => {

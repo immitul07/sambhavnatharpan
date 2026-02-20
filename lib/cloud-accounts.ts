@@ -1,4 +1,5 @@
 import { initializeApp, getApps, type FirebaseOptions } from "firebase/app";
+import { getAuth, signInAnonymously } from "firebase/auth";
 import { deleteDoc, doc, getDoc, getFirestore, setDoc } from "firebase/firestore";
 import Constants from "expo-constants";
 
@@ -45,7 +46,13 @@ function getFirestoreClient() {
   const config = getFirebaseConfig();
   if (!config) return null;
   const app = getApps().length > 0 ? getApps()[0] : initializeApp(config);
-  return getFirestore(app);
+  return { app, db: getFirestore(app) };
+}
+
+async function ensureSignedIn(app: ReturnType<typeof initializeApp>): Promise<void> {
+  const auth = getAuth(app);
+  if (auth.currentUser) return;
+  await signInAnonymously(auth);
 }
 
 function toDocId(phoneNumber: string, dob: string): string {
@@ -53,12 +60,13 @@ function toDocId(phoneNumber: string, dob: string): string {
 }
 
 export async function upsertCloudAccount(account: CloudAccount): Promise<boolean> {
-  const db = getFirestoreClient();
-  if (!db) return false;
+  const client = getFirestoreClient();
+  if (!client) return false;
+  await ensureSignedIn(client.app);
 
   const docId = toDocId(account.phoneNumber, account.dob);
   await setDoc(
-    doc(db, "accounts", docId),
+    doc(client.db, "accounts", docId),
     {
       ...account,
       phoneNumber: normalizePhone(account.phoneNumber),
@@ -74,10 +82,11 @@ export async function findCloudAccount(
   phoneNumber: string,
   dob: string,
 ): Promise<CloudAccount | null> {
-  const db = getFirestoreClient();
-  if (!db) return null;
+  const client = getFirestoreClient();
+  if (!client) return null;
+  await ensureSignedIn(client.app);
 
-  const snapshot = await getDoc(doc(db, "accounts", toDocId(phoneNumber, dob)));
+  const snapshot = await getDoc(doc(client.db, "accounts", toDocId(phoneNumber, dob)));
   if (!snapshot.exists()) return null;
   const data = snapshot.data() as Partial<CloudAccount>;
   if (!data.phoneNumber || !data.dob) return null;
@@ -100,8 +109,9 @@ export async function deleteCloudAccount(
   phoneNumber: string,
   dob: string,
 ): Promise<boolean> {
-  const db = getFirestoreClient();
-  if (!db) return false;
-  await deleteDoc(doc(db, "accounts", toDocId(phoneNumber, dob)));
+  const client = getFirestoreClient();
+  if (!client) return false;
+  await ensureSignedIn(client.app);
+  await deleteDoc(doc(client.db, "accounts", toDocId(phoneNumber, dob)));
   return true;
 }

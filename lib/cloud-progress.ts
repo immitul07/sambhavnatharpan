@@ -1,4 +1,5 @@
 import { getApps, initializeApp, type FirebaseOptions } from "firebase/app";
+import { getAuth, signInAnonymously } from "firebase/auth";
 import {
   collection,
   doc,
@@ -44,7 +45,13 @@ function getFirestoreClient() {
   const config = getFirebaseConfig();
   if (!config) return null;
   const app = getApps().length > 0 ? getApps()[0] : initializeApp(config);
-  return getFirestore(app);
+  return { app, db: getFirestore(app) };
+}
+
+async function ensureSignedIn(app: ReturnType<typeof initializeApp>): Promise<void> {
+  const auth = getAuth(app);
+  if (auth.currentUser) return;
+  await signInAnonymously(auth);
 }
 
 function toDocId(accountKey: string, dateKey: string): string {
@@ -52,11 +59,12 @@ function toDocId(accountKey: string, dateKey: string): string {
 }
 
 export async function upsertCloudProgress(record: CloudProgressRecord): Promise<boolean> {
-  const db = getFirestoreClient();
-  if (!db) return false;
+  const client = getFirestoreClient();
+  if (!client) return false;
+  await ensureSignedIn(client.app);
 
   await setDoc(
-    doc(db, "progress", toDocId(record.accountKey, record.dateKey)),
+    doc(client.db, "progress", toDocId(record.accountKey, record.dateKey)),
     {
       accountKey: record.accountKey,
       dateKey: record.dateKey,
@@ -71,10 +79,11 @@ export async function upsertCloudProgress(record: CloudProgressRecord): Promise<
 }
 
 export async function getCloudProgressByAccount(accountKey: string): Promise<CloudProgressRecord[]> {
-  const db = getFirestoreClient();
-  if (!db) return [];
+  const client = getFirestoreClient();
+  if (!client) return [];
+  await ensureSignedIn(client.app);
 
-  const q = query(collection(db, "progress"), where("accountKey", "==", accountKey));
+  const q = query(collection(client.db, "progress"), where("accountKey", "==", accountKey));
   const snapshots = await getDocs(q);
   const rows: CloudProgressRecord[] = [];
   snapshots.forEach((snap) => {

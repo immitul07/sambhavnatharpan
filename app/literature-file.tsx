@@ -102,7 +102,7 @@ function buildStyledPdfHtml(sections: DuhaSection[]): string {
     .map(
       (section) => `
         <section class="duha-block">
-          <h2>${escapeHtml(section.title)}</h2>
+          <h2>${escapeHtml(section.title || "")}</h2>
           ${section.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}
         </section>
       `,

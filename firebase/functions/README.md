@@ -1,6 +1,7 @@
 # Daily Email Backup (Firebase Functions)
 
 This function sends a daily CSV backup email of submitted user progress from Firestore.
+It also provides backend-verified admin session endpoints for the app.
 
 ## 1) Prerequisites
 
@@ -32,6 +33,10 @@ Copy `.env.example` to `.env` and fill values:
 - Optional schedule:
   - `DAILY_BACKUP_CRON` (default `0 22 * * *`)
   - `DAILY_BACKUP_TIMEZONE` (default `Asia/Kolkata`)
+- Admin backend login keys:
+  - `ADMIN_LOGIN_PHONE` (digits)
+  - `ADMIN_LOGIN_DOB` (`YYYY-MM-DD`)
+  - `ADMIN_SESSION_SECRET` (long random secret)
 
 ## 4) Deploy
 
@@ -59,3 +64,15 @@ firebase deploy --only functions
 ## 6) Function name
 
 - `sendDailySubmissionBackup`
+- `sendRegistrationNotification`
+- `adminSessionLogin` (HTTP POST)
+- `adminSessionVerify` (HTTP POST)
+
+## 7) Firestore rules
+
+Rules file is located at `firebase/firestore.rules` and requires authenticated clients.
+Deploy rules from `firebase/`:
+
+```bash
+firebase deploy --only firestore:rules
+```

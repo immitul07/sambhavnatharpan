@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { isAdminSessionValid, setAdminCredentials } from "@/lib/admin-auth";
 
 const defaultAdminPhoneNumber = "9999999999";
 const defaultAdminDob = "2000-01-01";
@@ -36,8 +37,7 @@ export default function AdminCredentialsScreen() {
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
-        const session = await AsyncStorage.getItem("adminSession");
-        if (session !== "true") {
+        if (!(await isAdminSessionValid())) {
           router.replace("/login");
           return;
         }
@@ -45,11 +45,6 @@ export default function AdminCredentialsScreen() {
         const storedPhone =
           (await AsyncStorage.getItem("adminPhoneNumber")) || defaultAdminPhoneNumber;
         const storedDob = (await AsyncStorage.getItem("adminDob")) || defaultAdminDob;
-
-        await AsyncStorage.multiSet([
-          ["adminPhoneNumber", storedPhone],
-          ["adminDob", storedDob],
-        ]);
         setPhoneNumber(storedPhone);
         setDob(toDisplayDob(storedDob));
       };
@@ -70,10 +65,7 @@ export default function AdminCredentialsScreen() {
       return;
     }
 
-    await AsyncStorage.multiSet([
-      ["adminPhoneNumber", normalizedPhone],
-      ["adminDob", storageDob],
-    ]);
+    await setAdminCredentials(normalizedPhone, storageDob);
     Alert.alert("Saved", "Admin login credentials updated.");
     router.back();
   };
@@ -147,4 +139,3 @@ export default function AdminCredentialsScreen() {
     </SafeAreaView>
   );
 }
-

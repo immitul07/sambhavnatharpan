@@ -5,6 +5,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Alert, ScrollView, Share, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { clearAdminSession, isAdminSessionValid } from "@/lib/admin-auth";
 
 type StoredAccount = {
   firstName: string;
@@ -165,8 +166,7 @@ export default function AdminDashboardScreen() {
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
-        const session = await AsyncStorage.getItem("adminSession");
-        if (session !== "true") {
+        if (!(await isAdminSessionValid())) {
           router.replace("/login");
           return;
         }
@@ -177,7 +177,7 @@ export default function AdminDashboardScreen() {
   );
 
   const logoutAdmin = async () => {
-    await AsyncStorage.multiRemove(["adminSession", "adminSelectedAccountKey"]);
+    await clearAdminSession();
     router.replace("/login");
   };
 

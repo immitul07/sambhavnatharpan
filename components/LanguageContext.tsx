@@ -21,9 +21,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<LangKey>('gu');
 
   useEffect(() => {
+    let isActive = true;
     AsyncStorage.getItem('appLanguage').then((val) => {
+      if (!isActive) return;
       if (val === 'en' || val === 'gu') setLangState(val);
     });
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const setLang = (l: LangKey) => {

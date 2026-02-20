@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image as ExpoImage } from "expo-image";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -15,6 +15,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { findCloudAccount } from "@/lib/cloud-accounts";
 import { getCloudProgressByAccount } from "@/lib/cloud-progress";
+import {
+  clearAdminSession,
+  tryStartAdminSession,
+} from "@/lib/admin-auth";
 
 type StoredAccount = {
   firstName: string;
@@ -28,9 +32,6 @@ type StoredAccount = {
   address: string;
   photoUri: string;
 };
-
-const defaultAdminPhoneNumber = "9999999999";
-const defaultAdminDob = "2000-01-01";
 
 export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -161,24 +162,7 @@ export default function LoginScreen() {
       return;
     }
 
-    const storedAdminPhone =
-      (await AsyncStorage.getItem("adminPhoneNumber")) || defaultAdminPhoneNumber;
-    const storedAdminDob = (await AsyncStorage.getItem("adminDob")) || defaultAdminDob;
-    const seedAdminEntries: [string, string][] = [];
-    if (!(await AsyncStorage.getItem("adminPhoneNumber"))) {
-      seedAdminEntries.push(["adminPhoneNumber", defaultAdminPhoneNumber]);
-    }
-    if (!(await AsyncStorage.getItem("adminDob"))) {
-      seedAdminEntries.push(["adminDob", defaultAdminDob]);
-    }
-    if (seedAdminEntries.length > 0) {
-      await AsyncStorage.multiSet(seedAdminEntries);
-    }
-
-    if (
-      normalizedPhone === normalizePhone(storedAdminPhone) &&
-      normalizedDob === storedAdminDob.trim()
-    ) {
+    if (await tryStartAdminSession(normalizedPhone, normalizedDob)) {
       await AsyncStorage.multiRemove([
         "firstName",
         "middleName",
@@ -196,7 +180,6 @@ export default function LoginScreen() {
         "activeAccountKey",
         "adminSelectedAccountKey",
       ]);
-      await AsyncStorage.setItem("adminSession", "true");
       router.replace("/admin-dashboard");
       return;
     }
@@ -325,7 +308,7 @@ export default function LoginScreen() {
       ["address", active.address],
       ["activeAccountKey", activeAccountKey],
     ]);
-    await AsyncStorage.multiRemove(["adminSession", "adminSelectedAccountKey"]);
+    await clearAdminSession();
 
     router.replace("/(tabs)");
   };

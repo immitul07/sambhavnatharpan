@@ -3,6 +3,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { isAdminSessionValid } from "@/lib/admin-auth";
 
 type StoredAccount = {
   firstName: string;
@@ -105,8 +106,7 @@ export default function AdminAccountDetailsScreen() {
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
-        const session = await AsyncStorage.getItem("adminSession");
-        if (session !== "true") {
+        if (!(await isAdminSessionValid())) {
           router.replace("/login");
           return;
         }

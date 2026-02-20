@@ -163,7 +163,6 @@ export default function HomeScreen() {
   const { lang, t } = useLanguage();
   const [showMenu, setShowMenu] = useState(false);
   const [name, setName] = useState("");
-  const [hotiNo, setHotiNo] = useState("");
   const [accountKey, setAccountKey] = useState("");
   const [checked, setChecked] = useState<{ [key: string]: boolean }>({});
   const [niyamList, setNiyamList] = useState<NiyamItem[]>(NIYAM_LIST);
@@ -214,38 +213,46 @@ export default function HomeScreen() {
     return `${monthNames[monthIndex]} ${year}`;
   };
 
-  const loadChecklistForDate = async (
-    dateKey: string,
-    currentAccountKey: string,
-    activeNiyamList: NiyamItem[] = niyamList,
-  ) => {
-    const checklistKey = getScopedProgressKey("aaradhana", currentAccountKey, dateKey);
-    const pointsKey = getScopedProgressKey("points", currentAccountKey, dateKey);
-    const submittedKey = getScopedProgressKey("submitted", currentAccountKey, dateKey);
+  const loadChecklistForDate = useCallback(
+    async (
+      dateKey: string,
+      currentAccountKey: string,
+      activeNiyamList: NiyamItem[],
+      isActive: () => boolean = () => true,
+    ) => {
+      const checklistKey = getScopedProgressKey("aaradhana", currentAccountKey, dateKey);
+      const pointsKey = getScopedProgressKey("points", currentAccountKey, dateKey);
+      const submittedKey = getScopedProgressKey("submitted", currentAccountKey, dateKey);
 
-    const savedChecklist = await AsyncStorage.getItem(checklistKey);
-    const parsedChecklist = savedChecklist
-      ? (JSON.parse(savedChecklist) as { [key: string]: boolean })
-      : {};
-    setChecked(parsedChecklist);
+      const savedChecklist = await AsyncStorage.getItem(checklistKey);
+      const parsedChecklist = savedChecklist
+        ? (JSON.parse(savedChecklist) as { [key: string]: boolean })
+        : {};
+      if (!isActive()) return;
+      setChecked(parsedChecklist);
 
-    const savedPoints = await AsyncStorage.getItem(pointsKey);
-    if (savedPoints) {
-      setPoints(Number(savedPoints) || 0);
-    } else {
-      const calculatedPoints = activeNiyamList.reduce(
-        (sum, item) => sum + (parsedChecklist[item.key] ? item.points : 0),
-        0,
-      );
-      setPoints(calculatedPoints);
-      await AsyncStorage.setItem(pointsKey, String(calculatedPoints));
-    }
+      const savedPoints = await AsyncStorage.getItem(pointsKey);
+      if (!isActive()) return;
+      if (savedPoints) {
+        setPoints(Number(savedPoints) || 0);
+      } else {
+        const calculatedPoints = activeNiyamList.reduce(
+          (sum, item) => sum + (parsedChecklist[item.key] ? item.points : 0),
+          0,
+        );
+        setPoints(calculatedPoints);
+        await AsyncStorage.setItem(pointsKey, String(calculatedPoints));
+      }
 
-    const submittedFlag = await AsyncStorage.getItem(submittedKey);
-    setIsSubmittedForDate(submittedFlag === "true");
-  };
+      const submittedFlag = await AsyncStorage.getItem(submittedKey);
+      if (!isActive()) return;
+      setIsSubmittedForDate(submittedFlag === "true");
+    },
+    [],
+  );
 
   useEffect(() => {
+    let isActive = true;
     const loadData = async () => {
       const savedName = await AsyncStorage.getItem("userName");
       const savedHoti =
@@ -254,20 +261,25 @@ export default function HomeScreen() {
       const resolvedAccountKey = await getAccountKeyFromStorage();
 
       if (!savedName || !savedHoti || !resolvedAccountKey) {
-        router.replace("/login");
+        if (isActive) {
+          router.replace("/login");
+        }
         return;
       }
 
       await migrateLegacyProgressData(resolvedAccountKey);
       const savedDob = (await AsyncStorage.getItem("dob")) || "";
       const resolvedNiyamList = getNiyamListForDob(savedDob);
+      const initialDateKey = getLocalDateKey();
+      if (!isActive) return;
       setNiyamList(resolvedNiyamList);
       setName(savedName);
-      setHotiNo(savedHoti);
       setAccountKey(resolvedAccountKey);
-      await loadChecklistForDate(selectedDate, resolvedAccountKey, resolvedNiyamList);
+      setSelectedDate(initialDateKey);
+      await loadChecklistForDate(initialDateKey, resolvedAccountKey, resolvedNiyamList, () => isActive);
 
       const currentStreak = await calculateStreak(resolvedAccountKey);
+      if (!isActive) return;
       setStreak(currentStreak);
 
       // Schedule daily reminder notification
@@ -275,15 +287,22 @@ export default function HomeScreen() {
     };
 
     loadData();
-  }, []);
+    return () => {
+      isActive = false;
+    };
+  }, [loadChecklistForDate, router]);
 
   useEffect(() => {
+    let isActive = true;
     const loadForSelectedDate = async () => {
       if (!accountKey) return;
-      await loadChecklistForDate(selectedDate, accountKey);
+      await loadChecklistForDate(selectedDate, accountKey, niyamList, () => isActive);
     };
     loadForSelectedDate();
-  }, [selectedDate, accountKey, niyamList]);
+    return () => {
+      isActive = false;
+    };
+  }, [selectedDate, accountKey, niyamList, loadChecklistForDate]);
 
   useEffect(() => {
     const [year, month] = selectedDate.split("-").map(Number);
@@ -292,17 +311,22 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      let isActive = true;
       const resetToToday = async () => {
         if (!accountKey) return;
         const currentToday = getLocalDateKey();
         setSelectedDate(currentToday);
         setShowCalendar(false);
-        await loadChecklistForDate(currentToday, accountKey);
+        await loadChecklistForDate(currentToday, accountKey, niyamList, () => isActive);
         const currentStreak = await calculateStreak(accountKey);
+        if (!isActive) return;
         setStreak(currentStreak);
       };
       resetToToday();
-    }, [accountKey]),
+      return () => {
+        isActive = false;
+      };
+    }, [accountKey, loadChecklistForDate, niyamList]),
   );
 
   const toggleItem = async (key: string) => {

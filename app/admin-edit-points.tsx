@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getNiyamListForDob, type NiyamItem } from "@/constants/niyams";
+import { isAdminSessionValid } from "@/lib/admin-auth";
 
 type StoredAccount = {
   firstName: string;
@@ -138,8 +139,7 @@ export default function AdminEditPointsScreen() {
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
-        const session = await AsyncStorage.getItem("adminSession");
-        if (session !== "true") {
+        if (!(await isAdminSessionValid())) {
           router.replace("/login");
           return;
         }

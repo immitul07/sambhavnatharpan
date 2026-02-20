@@ -76,6 +76,7 @@ export default function RegisterScreen() {
   const [address, setAddress] = useState("");
 
   useEffect(() => {
+    let isActive = true;
     const loadExistingProfile = async () => {
       const savedFirstName = (await AsyncStorage.getItem("firstName")) || "";
       const savedMiddleName = (await AsyncStorage.getItem("middleName")) || "";
@@ -99,6 +100,7 @@ export default function RegisterScreen() {
         | "Male"
         | "Female";
 
+      if (!isActive) return;
       setFirstName(savedFirstName);
       setMiddleName(savedMiddleName);
       setLastName(savedLastName);
@@ -117,6 +119,9 @@ export default function RegisterScreen() {
     };
 
     loadExistingProfile();
+    return () => {
+      isActive = false;
+    };
   }, []);
   const formatDobInput = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 8);
