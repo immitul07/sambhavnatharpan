@@ -441,7 +441,7 @@ export default function LoginScreen() {
               textShadowRadius: 3,
             }}
           >
-            સંભવનાથાર્પણ
+            સમર્પણમ્
           </Text>
           <Text
             style={{
@@ -454,7 +454,7 @@ export default function LoginScreen() {
               textTransform: "uppercase",
             }}
           >
-              Sambhavnatharpan
+              Samarpanam
             </Text>
         </View>
 

@@ -1,6 +1,8 @@
 import { initializeApp, getApps, type FirebaseOptions } from "firebase/app";
 import { getAuth, signInAnonymously } from "firebase/auth";
-import { deleteDoc, doc, getDoc, getFirestore, setDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore, setDoc } from "firebase/firestore";
+import { getDownloadURL, getStorage, ref, uploadString } from "firebase/storage";
+import * as FileSystem from "expo-file-system/legacy";
 import Constants from "expo-constants";
 
 export type CloudAccount = {
@@ -59,18 +61,57 @@ function toDocId(phoneNumber: string, dob: string): string {
   return `${normalizePhone(phoneNumber)}|${dob.trim()}`;
 }
 
+function getImageContentType(uri: string): string {
+  const lower = uri.toLowerCase();
+  if (lower.endsWith(".png")) return "image/png";
+  if (lower.endsWith(".webp")) return "image/webp";
+  return "image/jpeg";
+}
+
+async function uploadProfilePhotoIfNeeded(
+  app: ReturnType<typeof initializeApp>,
+  photoUri: string,
+  docId: string,
+): Promise<string> {
+  const trimmed = (photoUri || "").trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+  if (!trimmed.startsWith("file://")) return trimmed;
+
+  try {
+    const info = await FileSystem.getInfoAsync(trimmed);
+    if (!info.exists) return trimmed;
+
+    const base64 = await FileSystem.readAsStringAsync(trimmed, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    if (!base64) return trimmed;
+
+    const storage = getStorage(app);
+    const contentType = getImageContentType(trimmed);
+    const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+    const fileRef = ref(storage, `accounts/${encodeURIComponent(docId)}/profile-${Date.now()}.${ext}`);
+    await uploadString(fileRef, base64, "base64", { contentType });
+    return await getDownloadURL(fileRef);
+  } catch {
+    return trimmed;
+  }
+}
+
 export async function upsertCloudAccount(account: CloudAccount): Promise<boolean> {
   const client = getFirestoreClient();
   if (!client) return false;
   await ensureSignedIn(client.app);
 
   const docId = toDocId(account.phoneNumber, account.dob);
+  const cloudPhotoUri = await uploadProfilePhotoIfNeeded(client.app, account.photoUri, docId);
   await setDoc(
     doc(client.db, "accounts", docId),
     {
       ...account,
       phoneNumber: normalizePhone(account.phoneNumber),
       dob: account.dob.trim(),
+      photoUri: cloudPhotoUri || account.photoUri.trim(),
       updatedAt: Date.now(),
     },
     { merge: true },
@@ -114,4 +155,32 @@ export async function deleteCloudAccount(
   await ensureSignedIn(client.app);
   await deleteDoc(doc(client.db, "accounts", toDocId(phoneNumber, dob)));
   return true;
+}
+
+export async function listCloudAccounts(): Promise<CloudAccount[]> {
+  const client = getFirestoreClient();
+  if (!client) return [];
+  await ensureSignedIn(client.app);
+
+  const snapshots = await getDocs(collection(client.db, "accounts"));
+  const rows: CloudAccount[] = [];
+
+  snapshots.forEach((snap) => {
+    const data = snap.data() as Partial<CloudAccount>;
+    if (!data.phoneNumber || !data.dob) return;
+    rows.push({
+      firstName: data.firstName || "",
+      middleName: data.middleName || "",
+      lastName: data.lastName || "",
+      gender: data.gender || "",
+      fullName: data.fullName || "",
+      dob: data.dob.trim(),
+      hotiNo: data.hotiNo || "",
+      phoneNumber: normalizePhone(data.phoneNumber),
+      address: data.address || "",
+      photoUri: data.photoUri || "",
+    });
+  });
+
+  return rows;
 }

@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+﻿import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 
 const REMINDER_KEY = "dailyReminderScheduled";
@@ -75,7 +75,7 @@ export async function scheduleDailyReminder(): Promise<void> {
   try {
     await mod.scheduleNotificationAsync({
       content: {
-        title: "🙏 Sambhavnatharpan",
+        title: "🙏 Samarpanam",
         body: "દૈનિક નિયમ ભરો! / Fill your daily niyam!",
         sound: true,
       },
@@ -90,7 +90,7 @@ export async function scheduleDailyReminder(): Promise<void> {
     try {
       await mod.scheduleNotificationAsync({
         content: {
-          title: "🙏 Sambhavnatharpan",
+          title: "🙏 Samarpanam",
           body: "દૈનિક નિયમ ભરો! / Fill your daily niyam!",
           sound: true,
         },

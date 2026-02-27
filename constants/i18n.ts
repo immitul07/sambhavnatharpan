@@ -2,7 +2,7 @@ export type LangKey = 'gu' | 'en';
 
 const translations: Record<string, Record<LangKey, string>> = {
   // App title
-  appTitle: { gu: 'સંભવનાથાર્પણ', en: 'Sambhavnatharpan' },
+  appTitle: { gu: 'સમર્પણમ્', en: 'Samarpanam' },
   appSubtitle: { gu: 'પૂરણ નગરે 125 મી ધ્વજારોહણ નિમિત્તે સંભવનાથ દાદાને ભેટણું', en: 'Offering to Sambhavnath Dada on 125th Dhwaja-Arohan at Puran Nagare' },
 
   // Login

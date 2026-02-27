@@ -11,6 +11,8 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { listCloudAccounts } from "@/lib/cloud-accounts";
+import { getCloudProgressByAccount } from "@/lib/cloud-progress";
 
 const storageSeparator = "::";
 
@@ -105,7 +107,16 @@ export default function LeaderboardScreen() {
     setAgeGroupLabel(getAgeGroupLabel(currentAgeGroup));
 
     const raw = await AsyncStorage.getItem("accounts");
-    const accounts: StoredAccount[] = raw ? (JSON.parse(raw) as StoredAccount[]) : [];
+    let accounts: StoredAccount[] = raw ? (JSON.parse(raw) as StoredAccount[]) : [];
+    try {
+      const cloudAccounts = await listCloudAccounts();
+      if (cloudAccounts.length > 0) {
+        accounts = cloudAccounts;
+        await AsyncStorage.setItem("accounts", JSON.stringify(cloudAccounts));
+      }
+    } catch {
+      // Continue with local cache if cloud list is unavailable.
+    }
 
     // Filter accounts by hotiNo matching the current user's hoti
     const sameHotiAccounts = currentHoti
@@ -120,12 +131,27 @@ export default function LeaderboardScreen() {
 
     const leaderboardPromises = sameAgeGroupAccounts.map(async (acc) => {
         const accKey = getAccountKey(acc.phoneNumber, acc.dob);
-        const niyamList = getNiyamListForDob(acc.dob);
-        const dateKeys = await getAllDateKeysWithData(accKey);
-        const pointsArr = await Promise.all(
-          dateKeys.map((dk) => getPointsForDate(accKey, dk, niyamList)),
-        );
-        const total = pointsArr.reduce((sum, p) => sum + p, 0);
+        let total = 0;
+        try {
+          const cloudProgress = await getCloudProgressByAccount(accKey);
+          if (cloudProgress.length > 0) {
+            total = cloudProgress.reduce((sum, row) => sum + (row.points || 0), 0);
+          } else {
+            const niyamList = getNiyamListForDob(acc.dob);
+            const dateKeys = await getAllDateKeysWithData(accKey);
+            const pointsArr = await Promise.all(
+              dateKeys.map((dk) => getPointsForDate(accKey, dk, niyamList)),
+            );
+            total = pointsArr.reduce((sum, p) => sum + p, 0);
+          }
+        } catch {
+          const niyamList = getNiyamListForDob(acc.dob);
+          const dateKeys = await getAllDateKeysWithData(accKey);
+          const pointsArr = await Promise.all(
+            dateKeys.map((dk) => getPointsForDate(accKey, dk, niyamList)),
+          );
+          total = pointsArr.reduce((sum, p) => sum + p, 0);
+        }
         return {
           name: acc.fullName || `${acc.firstName || ""} ${acc.middleName || ""} ${acc.lastName || ""}`.trim(),
           totalPoints: total,

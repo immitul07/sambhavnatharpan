@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ActivityIndicator, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { useTheme } from '@/components/ThemeContext';
@@ -9,6 +11,58 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function TabLayout() {
   const { isDark, colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const verifyAuth = async () => {
+      const [savedName, savedHoti, activeAccountKey, phoneNumber, dob] =
+        await AsyncStorage.multiGet([
+          'userName',
+          'hotiNo',
+          'activeAccountKey',
+          'phoneNumber',
+          'dob',
+        ]);
+
+      const hasName = Boolean(savedName?.[1]?.trim());
+      const hasHoti = Boolean(savedHoti?.[1]?.trim());
+      const hasActiveKey = Boolean(activeAccountKey?.[1]?.trim());
+      const hasLegacyIdentity = Boolean(phoneNumber?.[1]?.trim() && dob?.[1]?.trim());
+
+      if (!hasName || !hasHoti || (!hasActiveKey && !hasLegacyIdentity)) {
+        if (isMounted) {
+          router.replace('/login');
+        }
+        return;
+      }
+
+      if (isMounted) {
+        setCheckingAuth(false);
+      }
+    };
+
+    verifyAuth();
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
+
+  if (checkingAuth) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: isDark ? '#0b1220' : '#f8fafc',
+        }}>
+        <ActivityIndicator size="large" color={colors.tint} />
+      </View>
+    );
+  }
 
   return (
     <Tabs
@@ -75,4 +129,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-

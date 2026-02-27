@@ -6,6 +6,8 @@ import { useCallback, useMemo, useState } from "react";
 import { Alert, ScrollView, Share, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { clearAdminSession, isAdminSessionValid } from "@/lib/admin-auth";
+import { listCloudAccounts } from "@/lib/cloud-accounts";
+import { getCloudProgressByAccount } from "@/lib/cloud-progress";
 
 type StoredAccount = {
   firstName: string;
@@ -120,7 +122,16 @@ export default function AdminDashboardScreen() {
 
   const loadAccounts = useCallback(async () => {
     const raw = await AsyncStorage.getItem("accounts");
-    const stored: StoredAccount[] = raw ? JSON.parse(raw) : [];
+    let stored: StoredAccount[] = raw ? JSON.parse(raw) : [];
+    try {
+      const cloudAccounts = await listCloudAccounts();
+      if (cloudAccounts.length > 0) {
+        stored = cloudAccounts;
+        await AsyncStorage.setItem("accounts", JSON.stringify(cloudAccounts));
+      }
+    } catch {
+      // Continue with local cache if cloud list is unavailable.
+    }
     const todayKey = getLocalDateKey();
 
     let submittedToday = 0;
@@ -129,18 +140,40 @@ export default function AdminDashboardScreen() {
     const options = await Promise.all(
       stored.map(async (account) => {
         const accountKey = getAccountKey(account.phoneNumber, account.dob);
-        const dates = await getAllDateKeysWithData(accountKey);
-        const points = await Promise.all(
-          dates.map((dateKey) => getPointsForDate(accountKey, dateKey)),
-        );
-        const totalPoints = points.reduce((sum, value) => sum + value, 0);
+        let totalPoints = 0;
+        let submittedTodayForAccount = false;
+        try {
+          const cloudProgress = await getCloudProgressByAccount(accountKey);
+          if (cloudProgress.length > 0) {
+            totalPoints = cloudProgress.reduce((sum, row) => sum + (row.points || 0), 0);
+            submittedTodayForAccount = cloudProgress.some(
+              (row) => row.dateKey === todayKey && !!row.submitted,
+            );
+          } else {
+            const dates = await getAllDateKeysWithData(accountKey);
+            const points = await Promise.all(
+              dates.map((dateKey) => getPointsForDate(accountKey, dateKey)),
+            );
+            totalPoints = points.reduce((sum, value) => sum + value, 0);
+            const submittedFlag = await AsyncStorage.getItem(
+              getScopedProgressKey("submitted", accountKey, todayKey),
+            );
+            submittedTodayForAccount = submittedFlag === "true";
+          }
+        } catch {
+          const dates = await getAllDateKeysWithData(accountKey);
+          const points = await Promise.all(
+            dates.map((dateKey) => getPointsForDate(accountKey, dateKey)),
+          );
+          totalPoints = points.reduce((sum, value) => sum + value, 0);
+          const submittedFlag = await AsyncStorage.getItem(
+            getScopedProgressKey("submitted", accountKey, todayKey),
+          );
+          submittedTodayForAccount = submittedFlag === "true";
+        }
         totalPtsAll += totalPoints;
 
-        // Check if submitted today
-        const submittedFlag = await AsyncStorage.getItem(
-          getScopedProgressKey("submitted", accountKey, todayKey),
-        );
-        if (submittedFlag === "true") submittedToday++;
+        if (submittedTodayForAccount) submittedToday++;
 
         return {
           accountKey,
@@ -245,7 +278,7 @@ export default function AdminDashboardScreen() {
       Alert.alert("No users", "No registered users to notify.");
       return;
     }
-    const message = `🙏 Jai Jinendra!\n\nDaily Reminder: Fill your today's niyam in Sambhavnatharpan app.\n\nદૈનિક રિમાઇન્ડર: આજનું નિયમ Sambhavnatharpan એપમાં ભરો.\n\n— Admin`;
+    const message = `🙏 Jai Jinendra!\n\nDaily Reminder: Fill your today's niyam in Samarpanam app.\n\nદૈનિક રિમાઇન્ડર: આજનું નિયમ Samarpanam એપમાં ભરો.\n\n— Admin`;
     try {
       await Share.share({ message });
     } catch { /* ignore */ }

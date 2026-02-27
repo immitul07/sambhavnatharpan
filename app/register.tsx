@@ -1,12 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system/legacy";
 import { deleteCloudAccount, upsertCloudAccount } from "@/lib/cloud-accounts";
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -71,7 +68,6 @@ export default function RegisterScreen() {
   const [gender, setGender] = useState<"" | "Male" | "Female">("");
   const [dob, setDob] = useState("");
   const [hotiNo, setHotiNo] = useState("");
-  const [photo, setPhoto] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
 
@@ -88,10 +84,6 @@ export default function RegisterScreen() {
       const savedHoti =
         (await AsyncStorage.getItem("hotiNo")) ||
         (await AsyncStorage.getItem("villageCode")) ||
-        "";
-      const savedPhoto =
-        (await AsyncStorage.getItem("profilePhoto")) ||
-        (await AsyncStorage.getItem("photoUri")) ||
         "";
       const savedPhone = (await AsyncStorage.getItem("phoneNumber")) || "";
       const savedAddress = (await AsyncStorage.getItem("address")) || "";
@@ -111,7 +103,6 @@ export default function RegisterScreen() {
         setDob(savedDob);
       }
       setHotiNo(savedHoti);
-      setPhoto(savedPhoto);
       setPhoneNumber(savedPhone);
       setAddress(savedAddress);
       setGender(savedGender);
@@ -145,8 +136,6 @@ export default function RegisterScreen() {
       !lastName.trim() ||
       !gender.trim() ||
       !dob.trim() ||
-      !hotiNo.trim() ||
-      !photo.trim() ||
       !phoneNumber.trim() ||
       !address.trim()
     ) {
@@ -177,7 +166,7 @@ export default function RegisterScreen() {
       hotiNo: hotiNo.trim(),
       phoneNumber: normalizedPhone,
       address: address.trim(),
-      photoUri: photo.trim(),
+      photoUri: "",
     };
 
     const oldActiveAccountKey = (await AsyncStorage.getItem("activeAccountKey")) || "";
@@ -216,8 +205,8 @@ export default function RegisterScreen() {
       ["dob", account.dob],
       ["hotiNo", account.hotiNo],
       ["villageCode", account.hotiNo],
-      ["profilePhoto", account.photoUri],
-      ["photoUri", account.photoUri],
+      ["profilePhoto", ""],
+      ["photoUri", ""],
       ["phoneNumber", account.phoneNumber],
       ["address", account.address],
       ["activeAccountKey", newAccountKey],
@@ -244,65 +233,6 @@ export default function RegisterScreen() {
       return;
     }
     router.replace("/thank-you");
-  };
-
-  const chooseFromGallery = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert("Permission required", "Please allow gallery access.");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets.length > 0) {
-      const persistedPhoto = await persistProfilePhoto(result.assets[0].uri);
-      setPhoto(persistedPhoto);
-    }
-  };
-
-  const takePhoto = async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert("Permission required", "Please allow camera access.");
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets.length > 0) {
-      const persistedPhoto = await persistProfilePhoto(result.assets[0].uri);
-      setPhoto(persistedPhoto);
-    }
-  };
-  const persistProfilePhoto = async (inputUri: string) => {
-    if (!inputUri) return "";
-
-    try {
-      const extensionMatch = inputUri.match(/\.(\w+)(?:\?|$)/);
-      const extension = extensionMatch ? extensionMatch[1] : "jpg";
-      const destination = `${FileSystem.documentDirectory}profile-photo-${Date.now()}.${extension}`;
-      await FileSystem.copyAsync({ from: inputUri, to: destination });
-      return destination;
-    } catch {
-      return inputUri;
-    }
-  };
-
-  const selectPhoto = () => {
-    Alert.alert("Profile Photo", "Choose photo source", [
-      { text: "Camera", onPress: takePhoto },
-      { text: "Gallery", onPress: chooseFromGallery },
-      { text: "Cancel", style: "cancel" },
-    ]);
   };
 
   return (
@@ -377,7 +307,7 @@ export default function RegisterScreen() {
           maxLength={10}
           style={styles.input}
         />
-        <Text style={styles.label}>હોટી નંબર (Hoti No.) *</Text>
+        <Text style={styles.label}>હોટી નંબર (Hoti No.)</Text>
         <TextInput
           placeholder="હોટી નંબર લખો (Enter Hoti No.)"
           value={hotiNo}
@@ -385,24 +315,6 @@ export default function RegisterScreen() {
           keyboardType="number-pad"
           style={styles.input}
         />
-        <Text style={styles.label}>ફોટો (Photo) *</Text>
-        <View style={[styles.input, { paddingVertical: 10 }]}>
-          {photo ? (
-            <Image
-              source={{ uri: photo }}
-              style={{ width: 96, height: 96, borderRadius: 12, marginBottom: 10 }}
-            />
-          ) : (
-            <Text style={{ color: "#666", marginBottom: 10 }}>
-              કોઈ ફોટો પસંદ કર્યો નથી (No photo selected)
-            </Text>
-          )}
-          <TouchableOpacity onPress={selectPhoto} style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>
-              કેમેરા / ગેલેરીમાંથી પસંદ કરો (Choose from Camera / Gallery)
-            </Text>
-          </TouchableOpacity>
-        </View>
         <Text style={styles.label}>ફોન નંબર (Phone Number) *</Text>
         <TextInput
           placeholder="ફોન નંબર લખો (Enter phone number)"

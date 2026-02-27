@@ -4,8 +4,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-    Image,
-    Modal,
     ScrollView,
     Switch,
     Text,
@@ -23,12 +21,20 @@ type ProfileData = {
   hotiNo: string;
   phoneNumber: string;
   address: string;
-  photoUri: string;
 };
 
 function getAgeCategory(dob: string): string {
   if (!dob) return "";
   return getAgeGroupLabel(getAgeGroupFromDob(dob));
+}
+
+function formatDobForDisplay(dob: string): string {
+  const trimmed = (dob || "").trim();
+  const parts = trimmed.split("-");
+  if (parts.length === 3 && parts[0].length === 4) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  return trimmed;
 }
 
 export default function ProfileScreen() {
@@ -37,12 +43,11 @@ export default function ProfileScreen() {
   const { lang, toggleLang, t } = useLanguage();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [showMenu, setShowMenu] = useState(false);
-  const [showPhotoModal, setShowPhotoModal] = useState(false);
 
   const loadProfile = useCallback(async () => {
     const keys = [
       "userName", "gender", "dob", "hotiNo", "villageCode",
-      "phoneNumber", "address", "photoUri", "profilePhoto",
+      "phoneNumber", "address",
     ];
     const entries = await AsyncStorage.multiGet(keys);
     const obj: Record<string, string> = {};
@@ -54,7 +59,6 @@ export default function ProfileScreen() {
     const hotiNo = obj.hotiNo || obj.villageCode || "";
     const phoneNumber = obj.phoneNumber || "";
     const address = obj.address || "";
-    const photoUri = obj.photoUri || obj.profilePhoto || "";
 
     setProfile({
       name,
@@ -64,7 +68,6 @@ export default function ProfileScreen() {
       hotiNo,
       phoneNumber,
       address,
-      photoUri,
     });
   }, []);
 
@@ -140,73 +143,11 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* ── Profile Photo ── */}
-        <View style={{ alignItems: "center", marginBottom: 20 }}>
-          {profile.photoUri ? (
-            <TouchableOpacity onPress={() => setShowPhotoModal(true)} activeOpacity={0.8}>
-              <Image
-                source={{ uri: profile.photoUri }}
-                style={{ width: 110, height: 110, borderRadius: 55, borderWidth: 3, borderColor: colors.accent }}
-              />
-              <Text style={{ textAlign: "center", marginTop: 6, color: colors.textSecondary, fontSize: 12 }}>
-                Tap to view
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <View
-              style={{
-                width: 110,
-                height: 110,
-                borderRadius: 55,
-                backgroundColor: colors.card,
-                borderWidth: 2,
-                borderColor: colors.border,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ fontSize: 36 }}>👤</Text>
-              <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4 }}>
-                {t('noPhoto')}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* ── Fullscreen Photo Modal ── */}
-        <Modal visible={showPhotoModal} transparent animationType="fade" onRequestClose={() => setShowPhotoModal(false)}>
-          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.92)", justifyContent: "center", alignItems: "center" }}>
-            {profile.photoUri ? (
-              <Image
-                source={{ uri: profile.photoUri }}
-                style={{ width: "90%", height: "70%", borderRadius: 12 }}
-                resizeMode="contain"
-              />
-            ) : null}
-            <TouchableOpacity
-              onPress={() => setShowPhotoModal(false)}
-              style={{
-                position: "absolute",
-                top: 50,
-                right: 20,
-                backgroundColor: "rgba(255,255,255,0.2)",
-                borderRadius: 20,
-                width: 40,
-                height: 40,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ fontSize: 22, color: "#fff" }}>✕</Text>
-            </TouchableOpacity>
-          </View>
-        </Modal>
-
         {/* ── Profile Info ── */}
         <View style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 14, overflow: "hidden", marginBottom: 16, backgroundColor: colors.card }}>
           {infoRow(t('name'), profile.name)}
           {infoRow(t('gender'), profile.gender)}
-          {infoRow(t('dateOfBirth'), profile.dob)}
+          {infoRow(t('dateOfBirth'), formatDobForDisplay(profile.dob))}
           {infoRow(t('ageCategory'), profile.ageCategory)}
           {infoRow(t('hotiNo'), profile.hotiNo)}
           {infoRow(t('phoneNumber'), profile.phoneNumber)}

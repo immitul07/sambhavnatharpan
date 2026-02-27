@@ -9,14 +9,29 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.admin == true;
     }
 
+    function canAccessAppData() {
+      return isSignedIn() || isAdmin();
+    }
+
+    // Allow optional hotiNo/villageCode/photoUri, but keep core account keys valid.
+    function isValidAccountWrite() {
+      return request.resource.data.phoneNumber is string
+        && request.resource.data.dob is string
+        && (!request.resource.data.keys().hasAny(["hotiNo"]) || request.resource.data.hotiNo is string)
+        && (!request.resource.data.keys().hasAny(["villageCode"]) || request.resource.data.villageCode is string)
+        && (!request.resource.data.keys().hasAny(["photoUri"]) || request.resource.data.photoUri is string);
+    }
+
     // Accounts and progress are readable/writable only by authenticated clients.
     // Promote admin-only or per-user ownership constraints from here once user auth is finalized.
     match /accounts/{accountId} {
-      allow read, write: if isSignedIn() || isAdmin();
+      allow read: if canAccessAppData();
+      allow create, update: if canAccessAppData() && isValidAccountWrite();
+      allow delete: if canAccessAppData();
     }
 
     match /progress/{progressId} {
-      allow read, write: if isSignedIn() || isAdmin();
+      allow read, write: if canAccessAppData();
     }
 
     match /{document=**} {

@@ -394,7 +394,7 @@ export default function SummaryScreen() {
   const shareProgress = async () => {
     const accountKey = await getAccountKeyFromStorage();
     const user = await getExportUserInfo(accountKey);
-    const message = `🙏 Jai Jinendra!\n\nMy Sambhavnatharpan progress:\n🔥 Streak: ${streak} days\n📊 Total Points: ${totalPoints}\n📅 Days Tracked: ${totalDaysTracked}\n\n— ${user.name}`;
+    const message = `🙏 Jai Jinendra!\n\nMy Samarpanam progress:\n🔥 Streak: ${streak} days\n📊 Total Points: ${totalPoints}\n📅 Days Tracked: ${totalDaysTracked}\n\n— ${user.name}`;
     try {
       await Share.share({ message });
     } catch { /* ignore */ }

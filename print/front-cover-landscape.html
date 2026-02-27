@@ -1,0 +1,244 @@
+﻿<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>સમર્પણમ્ - Front Cover (Landscape)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;700;800&family=Caveat:wght@600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    @page { size: A4 landscape; margin: 0; }
+
+    body {
+      width: 297mm;
+      height: 210mm;
+      font-family: 'Noto Sans Gujarati', sans-serif;
+      background: #f6f1e7;
+      color: #111;
+    }
+
+    .page {
+      width: 100%;
+      height: 100%;
+      border: 2px solid #111;
+      padding: 7mm 10mm;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      background:
+        radial-gradient(circle at 15% 18%, rgba(0,0,0,0.05) 0 2px, transparent 3px) 0 0 / 26px 26px,
+        linear-gradient(#faf7f1, #f3ede1);
+    }
+    .page::before {
+      content: '';
+      position: absolute;
+      inset: 3.5mm;
+      border: 1.2px solid rgba(17, 17, 17, 0.85);
+      border-radius: 2mm;
+      pointer-events: none;
+    }
+
+    .top-mantras {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4mm;
+      text-align: center;
+      font-size: 6.2mm;
+      font-weight: 700;
+      margin-bottom: 2mm;
+    }
+
+    .intro {
+      text-align: center;
+      font-size: 6.4mm;
+      font-weight: 700;
+      line-height: 1.35;
+      margin-bottom: 1.1mm;
+    }
+
+    .logo-wrap {
+      width: 45mm;
+      height: 45mm;
+      border: 1.8px solid #222;
+      border-radius: 50%;
+      margin: 2mm auto 1.2mm;
+      display: grid;
+      place-items: center;
+      background: #fff;
+    }
+
+    .logo-wrap img {
+      width: 35mm;
+      height: 35mm;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 1.2px solid #222;
+    }
+
+    .title-gu {
+      text-align: center;
+      font-size: 13mm;
+      font-weight: 800;
+      line-height: 1;
+      margin-top: 0.5mm;
+    }
+
+    .title-en {
+      text-align: center;
+      font-family: 'Caveat', cursive;
+      font-size: 8.8mm;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-top: 0;
+    }
+
+    .scheme {
+      text-align: center;
+      font-size: 6.8mm;
+      font-weight: 800;
+      margin-top: 0.4mm;
+      text-decoration: underline;
+      text-underline-offset: 1.2mm;
+    }
+
+    .small-line {
+      text-align: center;
+      font-size: 5.6mm;
+      line-height: 1.45;
+      margin-top: 1.2mm;
+    }
+
+    .booklet-label {
+      text-align: center;
+      margin-top: 1.2mm;
+      font-size: 6.5mm;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 1.2mm;
+    }
+
+    .period {
+      width: 100%;
+      margin: 1.6mm 0 1.4mm;
+      padding: 2mm 3.2mm;
+      border: 1.4px solid #111;
+      border-radius: 2.4mm;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3mm;
+      font-size: 5.8mm;
+      font-weight: 700;
+    }
+
+    .period span {
+      text-align: center;
+      line-height: 1.35;
+    }
+
+    .organizer {
+      text-align: center;
+      font-size: 6mm;
+      line-height: 1.45;
+      font-weight: 700;
+      margin-bottom: 1.2mm;
+    }
+
+    .contact {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2mm 8mm;
+      font-size: 5.5mm;
+      font-weight: 700;
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+      min-height: 8mm;
+    }
+
+    .line {
+      flex: 1;
+      border-bottom: 1.3px solid #111;
+      height: 6mm;
+    }
+
+    .wa-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      white-space: nowrap;
+    }
+
+    .wa-icon {
+      width: 5.3mm;
+      height: 5.3mm;
+      display: inline-block;
+    }
+
+    @media print {
+      .page { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="top-mantras">
+      <div>॥ શ્રી આદિનાથાય નમઃ ॥</div>
+      <div>॥ શ્રી સંભવનાથાય નમઃ ॥</div>
+      <div>॥ શ્રી અજીતનાથાય નમઃ ॥</div>
+    </div>
+
+    <div class="intro">
+      પૂરણ નગરે<br>
+      શ્રી સંભવનાથ જિનાલયની<br>
+      125મી ધ્વજારોહણ નિમિત્તે
+    </div>
+
+    <div class="logo-wrap">
+      <img src="../assets/images/dhwaja-square.jpg" alt="Samarpanam Logo">
+    </div>
+
+    <div class="title-gu">સમર્પણમ્</div>
+    <div class="title-en">SAMARPANAM</div>
+    <div class="scheme">યોજનાનું નામ</div>
+
+    <div class="small-line">
+      કૃતજ્ઞતા તથા ધર્મભાવના અભિવ્યક્તિનો અનુપમ અવસર
+    </div>
+
+    <div class="booklet-label">દૈનિક નિયમ પુસ્તિકા</div>
+
+    <div class="period">
+      <span>શરૂઆત: 14 Mar 2026<br>(ફાગણ વદ 10)</span>
+      <span>પૂર્ણાહુતિ: 14 Dec 2026<br>(માગશર સુદ 5)</span>
+    </div>
+
+    <div class="organizer">
+      આયોજક:<br>
+      શ્રી પૂરણ પંચ મહાજન
+    </div>
+
+    <div class="contact">
+      <div class="field"><span>નામ:</span><span class="line"></span></div>
+      <div class="field"><span>ઉંમર:</span><span class="line"></span></div>
+      <div class="field"><span>સરનામું:</span><span class="line"></span></div>
+      <div class="field">
+        <span class="wa-label">
+          <svg class="wa-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#25D366" d="M12.04 2C6.58 2 2.16 6.42 2.16 11.88c0 1.74.46 3.43 1.33 4.91L2 22l5.36-1.44a9.85 9.85 0 0 0 4.68 1.19h.01c5.45 0 9.88-4.42 9.88-9.88S17.5 2 12.04 2z"/>
+            <path fill="#fff" d="M17.55 14.41c-.3-.15-1.77-.87-2.05-.96-.28-.1-.48-.15-.68.15s-.77.96-.95 1.15c-.17.2-.35.22-.65.08-.3-.15-1.26-.46-2.4-1.46a8.98 8.98 0 0 1-1.66-2.06c-.17-.3-.02-.46.13-.6.13-.13.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.03-.53-.08-.15-.68-1.65-.93-2.25-.25-.6-.5-.52-.68-.52h-.58c-.2 0-.53.08-.8.38s-1.05 1.03-1.05 2.5 1.08 2.9 1.23 3.1c.15.2 2.12 3.24 5.13 4.54.72.31 1.28.49 1.72.63.72.23 1.38.2 1.9.12.58-.09 1.77-.72 2.02-1.42.25-.69.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35z"/>
+          </svg>
+        </span>
+        <span class="line"></span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
